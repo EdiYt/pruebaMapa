@@ -14,6 +14,9 @@ import android.location.LocationManager;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
+import android.widget.Button;
+import android.widget.EditText;
+import android.widget.ImageButton;
 
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.here.sdk.core.Color;
@@ -51,6 +54,10 @@ public class MainActivity extends AppCompatActivity implements PlatformPositioni
     private MapView mapView;
     private PlatformPositioningProvider positioningProvider;
     private LocationIndicator currentLocationIndicator;
+    private ImageButton botonBuscar;
+    private EditText cajaBusqueda;
+    private SearchExample searchExample;
+    private String textoIngresado;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -70,6 +77,20 @@ public class MainActivity extends AppCompatActivity implements PlatformPositioni
 
         // Initialize positioning provider
         positioningProvider = new PlatformPositioningProvider(this);
+
+
+
+
+        cajaBusqueda = findViewById(R.id.cajaBusqueda);
+        textoIngresado = cajaBusqueda.getText().toString();
+
+
+        botonBuscar = findViewById(R.id.botonBuscar);
+        botonBuscar.setOnClickListener(v -> {
+            textoIngresado = cajaBusqueda.getText().toString();
+        });
+        
+        Log.i("Caja de busqueda:", textoIngresado);
     }
 
     // Método que se pasa al oncreate
