@@ -13,28 +13,44 @@ import android.location.Location;
 import android.location.LocationManager;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.View;
 
+import com.google.android.material.floatingactionbutton.FloatingActionButton;
+import com.here.sdk.core.Color;
 import com.here.sdk.core.GeoCoordinates;
+import com.here.sdk.core.GeoCoordinatesUpdate;
+import com.here.sdk.core.GeoOrientationUpdate;
+import com.here.sdk.core.GeoPolyline;
 import com.here.sdk.core.engine.SDKNativeEngine;
 import com.here.sdk.core.engine.SDKOptions;
 import com.here.sdk.core.errors.InstantiationErrorException;
+import com.here.sdk.mapview.LineCap;
+import com.here.sdk.mapview.LocationIndicator;
+import com.here.sdk.mapview.MapCamera;
+import com.here.sdk.mapview.MapCameraAnimation;
+import com.here.sdk.mapview.MapCameraAnimationFactory;
 import com.here.sdk.mapview.MapError;
 import com.here.sdk.mapview.MapMeasure;
+import com.here.sdk.mapview.MapMeasureDependentRenderSize;
+import com.here.sdk.mapview.MapPolyline;
 import com.here.sdk.mapview.MapScene;
 import com.here.sdk.mapview.MapScheme;
 import com.here.sdk.mapview.MapView;
+import com.here.sdk.mapview.RenderSize;
+import com.here.time.Duration;
 
+import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Date;
 
-import java.util.Locale;
-
-public class MainActivity extends AppCompatActivity implements PlatformPositioningProvider.PlatformLocationListener{
+public class MainActivity extends AppCompatActivity implements PlatformPositioningProvider.PlatformLocationListener {
 
     private static final int REQUEST_INTERNET_PERMISSION = 100;
     private static final int REQUEST_LOCATION_PERMISSION = 101;
+
     private MapView mapView;
-    private LocationManager locationManager;
-    private PlatformPositioningProvider platformPositioningProvider;
-    private Context context;
+    private PlatformPositioningProvider positioningProvider;
+    private LocationIndicator currentLocationIndicator;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -42,7 +58,6 @@ public class MainActivity extends AppCompatActivity implements PlatformPositioni
         // Siempre se debe inicializar el sdk antes del contentView si no la app peta
         initializeHERESDK();
         setContentView(R.layout.activity_main);
-        context = this;
 
         // Creamos la instancia del mapa
         mapView = findViewById(R.id.map_view);
@@ -53,45 +68,9 @@ public class MainActivity extends AppCompatActivity implements PlatformPositioni
         requestInternetPermission();
         requestLocationPermission();
 
-        // Creamos una escena y ponemos el diseño que se ocupe
-        MapScheme mapScheme = MapScheme.NORMAL_DAY;
-
-        // Ocupamos esto para que se cargue la escena
-        mapView.getMapScene().loadScene(mapScheme, new MapScene.LoadSceneCallback(){
-            @Override
-            public void onLoadScene(@Nullable MapError mapError) {
-                if (mapError == null) {
-                    // ...
-                } else {
-
-                }
-            }
-        });
-
-        // Esto limita los fps en los que se ve el mapa
-        mapView.setFrameRate(60);
-
-
-
-        platformPositioningProvider = new PlatformPositioningProvider(context);
-        platformPositioningProvider.startLocating(new PlatformPositioningProvider.PlatformLocationListener() {
-            @Override
-            public void onLocationUpdated(android.location.Location location) {
-                // Aquí puedes acceder a la ubicación actualizada
-                double latitud = location.getLatitude();
-                double longitud = location.getLongitude();
-                double altitud = location.getAltitude();
-
-                // Puedes mostrar la ubicación en el mapa o realizar otras operaciones
-                GeoCoordinates geoCoordinates = new GeoCoordinates(latitud, longitud);
-                mapView.getCamera().lookAt(geoCoordinates);
-            }
-        });
-
-
+        // Initialize positioning provider
+        positioningProvider = new PlatformPositioningProvider(this);
     }
-
-
 
     // Método que se pasa al oncreate
     private void initializeHERESDK() {
@@ -107,6 +86,7 @@ public class MainActivity extends AppCompatActivity implements PlatformPositioni
         }
     }
 
+
     private void disposeHERESDK() {
         // Free HERE SDK resources before the application shuts down.
         // Usually, this should be called only on application termination.
@@ -121,39 +101,70 @@ public class MainActivity extends AppCompatActivity implements PlatformPositioni
     }
 
     private void loadMapScene() {
-        // Load a scene from the HERE SDK to render the map with a map scheme.
-        mapView.getMapScene().loadScene(MapScheme.NORMAL_DAY, new MapScene.LoadSceneCallback() {
-            @Override
-            public void onLoadScene(@Nullable MapError mapError) {
-                if (mapError == null) {
-                    double distanceInMeters = 1000 * 10;
-                    MapMeasure mapMeasureZoom = new MapMeasure(MapMeasure.Kind.DISTANCE, distanceInMeters);
-                    mapView.getCamera().lookAt(
-                            new GeoCoordinates(52.530932, 13.384915), mapMeasureZoom);
-                } else {
-                    Log.d("loadMapScene()", "Loading map failed: mapError: " + mapError.name());
-                }
+        // Verifica si tienes permisos para acceder a la ubicación del usuario
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
+            // Obtén la última ubicación conocida del usuario
+            LocationManager locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
+            Location lastKnownLocation = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
+            if (lastKnownLocation != null) {
+                // Si se encuentra una ubicación conocida, mueve la cámara del mapa a esa ubicación
+                GeoCoordinates userCoordinates = new GeoCoordinates(lastKnownLocation.getLatitude(), lastKnownLocation.getLongitude());
+                mapView.getCamera().lookAt(userCoordinates);
             }
-        });
+        }
+        // Verifica si es después de las 8:00 p.m. y antes de las 6:00 a.m.
+        Calendar calendar = Calendar.getInstance();
+        int hour = calendar.get(Calendar.HOUR_OF_DAY);
+        if (hour >= 10 || hour < 6) {
+            // Carga la escena del mapa con el esquema MapScheme.NORMAL_NIGHT
+            mapView.getMapScene().loadScene(MapScheme.NORMAL_NIGHT, new MapScene.LoadSceneCallback() {
+                @Override
+                public void onLoadScene(@Nullable MapError mapError) {
+                    if (mapError == null) {
+                        // No se produjo ningún error al cargar la escena del mapa
+                    } else {
+                        Log.d("loadMapScene()", "Loading map failed: mapError: " + mapError.name());
+                    }
+                }
+            });
+        } else {
+            // Carga la escena del mapa con el esquema MapScheme.NORMAL_DAY
+            mapView.getMapScene().loadScene(MapScheme.NORMAL_DAY, new MapScene.LoadSceneCallback() {
+                @Override
+                public void onLoadScene(@Nullable MapError mapError) {
+                    if (mapError == null) {
+                        // No se produjo ningún error al cargar la escena del mapa
+                    } else {
+                        Log.d("loadMapScene()", "Loading map failed: mapError: " + mapError.name());
+                    }
+                }
+            });
+        }
     }
 
     @Override
     protected void onPause() {
-        mapView.onPause();
         super.onPause();
+        mapView.onPause();
+        // Stop location updates when the activity pauses
+        stopLocationUpdates();
+
     }
 
     @Override
     protected void onResume() {
-        mapView.onResume();
         super.onResume();
+        mapView.onResume();
+        // Start location updates when the activity resumes
+        startLocationUpdates();
+
     }
 
     @Override
     protected void onDestroy() {
+        super.onDestroy();
         mapView.onDestroy();
         disposeHERESDK();
-        super.onDestroy();
     }
 
     @Override
@@ -202,8 +213,72 @@ public class MainActivity extends AppCompatActivity implements PlatformPositioni
         }
     }
 
-    @Override
-    public void onLocationUpdated(android.location.Location location) {
-
+    private void startLocationUpdates() {
+        // Start location updates
+        positioningProvider.startLocating(this);
     }
+
+    private void stopLocationUpdates() {
+        // Stop location updates
+        positioningProvider.stopLocating();
+    }
+
+    @Override
+    public void onLocationUpdated(Location location) {
+        // Actualiza la posición del usuario en el mapa
+        updateMapUserLocation(location.getLatitude(), location.getLongitude());
+
+        // Agrega un nuevo indicador de ubicación en las nuevas coordenadas
+        GeoCoordinates userCoordinates = new GeoCoordinates(location.getLatitude(), location.getLongitude());
+        addLocationIndicator(userCoordinates, LocationIndicator.IndicatorStyle.PEDESTRIAN);
+    }
+
+
+    private void updateMapUserLocation(double latitude, double longitude) {
+        GeoCoordinates userCoordinates = new GeoCoordinates(latitude, longitude);
+        mapView.getCamera().lookAt(userCoordinates);
+    }
+
+    private void addLocationIndicator(GeoCoordinates geoCoordinates,
+                                      LocationIndicator.IndicatorStyle indicatorStyle) {
+        // Elimina el indicador de ubicación actual, si existe
+        removeLocationIndicator();
+
+        // Crea un nuevo indicador de ubicación
+        LocationIndicator locationIndicator = new LocationIndicator();
+        locationIndicator.setLocationIndicatorStyle(indicatorStyle);
+
+        // A LocationIndicator is intended to mark the user's current location,
+        // including a bearing direction.
+        com.here.sdk.core.Location location = new com.here.sdk.core.Location(geoCoordinates);
+        location.time = new Date();
+        location.bearingInDegrees = getRandom(0, 360);
+
+        locationIndicator.updateLocation(location);
+
+        // Show the indicator on the map view.
+        locationIndicator.enable(mapView);
+
+        // Asigna la referencia al nuevo indicador de ubicación
+        currentLocationIndicator = locationIndicator;
+    }
+
+    private void removeLocationIndicator() {
+        // Verifica si hay un indicador de ubicación actual mostrándose y lo elimina
+        if (currentLocationIndicator != null) {
+            currentLocationIndicator.disable();
+            currentLocationIndicator = null;
+        }
+    }
+
+    private double getRandom(double min, double max) {
+        return min + Math.random() * (max - min);
+    }
+
+    private void tiltMap() {
+        double bearing = mapView.getCamera().getState().orientationAtTarget.bearing;
+        double tilt =  60;
+        mapView.getCamera().setOrientationAtTarget(new GeoOrientationUpdate(bearing, tilt));
+    }
+
 }

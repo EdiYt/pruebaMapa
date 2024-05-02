@@ -19,7 +19,7 @@ import androidx.core.app.ActivityCompat;
 public class PlatformPositioningProvider implements LocationListener {
 
     public static final String LOG_TAG = PlatformPositioningProvider.class.getName();
-    public static final int LOCATION_UPDATE_INTERVAL_IN_MS = 10;
+    public static final int LOCATION_UPDATE_INTERVAL_IN_MS = 100;
 
     private Context context;
     private LocationManager locationManager;
