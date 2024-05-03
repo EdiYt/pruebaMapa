@@ -18,6 +18,7 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageButton;
+import android.widget.Toast;
 
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.here.sdk.core.Color;
@@ -81,6 +82,23 @@ public class MainActivity extends AppCompatActivity implements PlatformPositioni
         // Initialize positioning provider
         positioningProvider = new PlatformPositioningProvider(this);
 
+
+
+        cajaBusqueda = findViewById(R.id.cajaBusqueda);
+        botonBuscar = findViewById(R.id.botonBuscar);
+
+        botonBuscar.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                String direccion = cajaBusqueda.getText().toString();
+                if (!direccion.isEmpty()) {
+                    // Llamar al método de búsqueda en la clase SearchExample
+                    searchExample.geocodeAddressAtLocation(direccion, mapView.getCamera().getState().targetCoordinates);
+                } else {
+                    Toast.makeText(MainActivity.this, "Por favor, ingrese una dirección", Toast.LENGTH_SHORT).show();
+                }
+            }
+        });
     }
 
     public void searchExampleButtonClicked(View view) {
@@ -241,7 +259,7 @@ public class MainActivity extends AppCompatActivity implements PlatformPositioni
     @Override
     public void onLocationUpdated(Location location) {
         // Actualiza la posición del usuario en el mapa
-        // updateMapUserLocation(location.getLatitude(), location.getLongitude());
+        updateMapUserLocation(location.getLatitude(), location.getLongitude());
 
         // Agrega un nuevo indicador de ubicación en las nuevas coordenadas
         GeoCoordinates userCoordinates = new GeoCoordinates(location.getLatitude(), location.getLongitude());

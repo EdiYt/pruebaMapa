@@ -35,7 +35,7 @@
             android:backgroundTint="#FFFFFF"
             android:ems="10"
             android:inputType="text"
-            android:text="Name" />
+            tools:text="Name" />
 
         <ImageButton
             android:id="@+id/botonBuscar"

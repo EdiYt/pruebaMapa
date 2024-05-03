@@ -100,7 +100,7 @@ public class SearchExample {
     }
 
     private void searchExample() {
-        String searchTerm = "Mobil";
+        String searchTerm = "Hospital Aranda de la Parra";
 
         Toast.makeText(context,"Searching in viewport: " + searchTerm, Toast.LENGTH_LONG).show();
         searchInViewport(searchTerm);
@@ -297,14 +297,13 @@ public class SearchExample {
                 autosuggestCallback);
     }
 
-    private void geocodeAddressAtLocation(String queryString, GeoCoordinates geoCoordinates) {
+    public void geocodeAddressAtLocation(String queryString, GeoCoordinates geoCoordinates) {
         clearMap();
 
         AddressQuery query = new AddressQuery(queryString, geoCoordinates);
-
         SearchOptions options = new SearchOptions();
         options.languageCode = LanguageCode.DE_DE;
-        options.maxItems = 30;
+        options.maxItems = 1;
 
         searchEngine.search(query, options, geocodeAddressSearchCallback);
     }
