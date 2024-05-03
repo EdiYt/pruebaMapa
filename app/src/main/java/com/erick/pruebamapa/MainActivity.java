@@ -108,9 +108,23 @@ public class MainActivity extends AppCompatActivity implements PlatformPositioni
         regresarUbicacion.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-
+                moverCamaraAUbicacionActual();
             }
         });
+    }
+
+    private void moverCamaraAUbicacionActual() {
+        // Verifica si tienes permisos para acceder a la ubicación del usuario
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
+            LocationManager locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
+            Location lastKnownLocation = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
+            if (lastKnownLocation != null) {
+                GeoCoordinates userCoordinates = new GeoCoordinates(lastKnownLocation.getLatitude(), lastKnownLocation.getLongitude());
+                double distanceInMeters = 1000 * 0.5; // Ajusta la distancia según tus preferencias
+                MapMeasure mapMeasureZoom = new MapMeasure(MapMeasure.Kind.DISTANCE, distanceInMeters);
+                mapView.getCamera().lookAt(userCoordinates, mapMeasureZoom);
+            }
+        }
     }
 
     private void flyTo(GeoCoordinates geoCoordinates) {
