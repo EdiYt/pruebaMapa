@@ -186,8 +186,8 @@ public class SearchExample {
                     }
                 }
 
-                showDialog("Picked Map Marker",
-                        "Geographic coordinates: " +
+                showDialog("Coordenadas",
+                        "" +
                                 topmostMapMarker.getCoordinates().latitude + ", " +
                                 topmostMapMarker.getCoordinates().longitude);
             }
