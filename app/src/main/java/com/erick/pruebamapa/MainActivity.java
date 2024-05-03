@@ -54,9 +54,10 @@ public class MainActivity extends AppCompatActivity implements PlatformPositioni
     private static final int REQUEST_LOCATION_PERMISSION = 101;
 
     private MapView mapView;
+    private MapCamera mapCamera;
     private PlatformPositioningProvider positioningProvider;
     private LocationIndicator currentLocationIndicator;
-    private ImageButton botonBuscar;
+    private ImageButton botonBuscar, regresarUbicacion;
     private EditText cajaBusqueda;
     private SearchExample searchExample;
     private String textoIngresado = "";
@@ -100,6 +101,24 @@ public class MainActivity extends AppCompatActivity implements PlatformPositioni
                 }
             }
         });
+
+        mapCamera = mapView.getCamera();
+        regresarUbicacion = findViewById(R.id.regresarUbicacion);
+
+        regresarUbicacion.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+
+            }
+        });
+    }
+
+    private void flyTo(GeoCoordinates geoCoordinates) {
+        GeoCoordinatesUpdate geoCoordinatesUpdate = new GeoCoordinatesUpdate(geoCoordinates);
+        double bowFactor = 1;
+        MapCameraAnimation animation =
+                MapCameraAnimationFactory.flyTo(geoCoordinatesUpdate, bowFactor, Duration.ofSeconds(3));
+        mapCamera.startAnimation(animation);
     }
 
     public void searchExampleButtonClicked(View view) {
