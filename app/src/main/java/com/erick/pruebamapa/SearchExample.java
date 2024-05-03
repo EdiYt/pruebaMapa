@@ -316,19 +316,25 @@ public class SearchExample {
                 return;
             }
 
-            for (Place geocodingResult : list) {
-                // Note: getGeoCoordinates() may return null only for Suggestions.
-                GeoCoordinates geoCoordinates = geocodingResult.getGeoCoordinates();
-                Address address = geocodingResult.getAddress();
-                String locationDetails = address.addressText
-                        + ". GeoCoordinates: " + geoCoordinates.latitude
-                        + ", " + geoCoordinates.longitude;
-
-                Log.d(LOG_TAG, "GeocodingResult: " + locationDetails);
-                addPoiMapMarker(geoCoordinates);
+            if (list.isEmpty()) {
+                showDialog("Geocoding result", "No se encontraron resultados");
+                return;
             }
 
-            showDialog("Geocoding result","Size: " + list.size());
+            Place geocodingResult = list.get(0); // Obtener el primer resultado
+            GeoCoordinates geoCoordinates = geocodingResult.getGeoCoordinates();
+            Address address = geocodingResult.getAddress();
+            String locationDetails = address.addressText
+                    + ". GeoCoordinates: " + geoCoordinates.latitude
+                    + ", " + geoCoordinates.longitude;
+
+            Log.d(LOG_TAG, "GeocodingResult: " + locationDetails);
+            addPoiMapMarker(geoCoordinates); // Agregar un marcador en el mapa
+
+            // Mover la cámara del mapa a la dirección buscada
+            double distanceInMeters = 1000 * 0.5; // Ajusta la distancia según tus preferencias
+            MapMeasure mapMeasureZoom = new MapMeasure(MapMeasure.Kind.DISTANCE, distanceInMeters);
+            camera.lookAt(geoCoordinates, mapMeasureZoom);
         }
     };
 

@@ -87,6 +87,7 @@ public class MainActivity extends AppCompatActivity implements PlatformPositioni
         cajaBusqueda = findViewById(R.id.cajaBusqueda);
         botonBuscar = findViewById(R.id.botonBuscar);
 
+
         botonBuscar.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -148,13 +149,13 @@ public class MainActivity extends AppCompatActivity implements PlatformPositioni
         // Verifica si es después de las 8:00 p.m. y antes de las 6:00 a.m.
         Calendar calendar = Calendar.getInstance();
         int hour = calendar.get(Calendar.HOUR_OF_DAY);
-        if (hour >= 10 || hour < 6) {
+        if (hour >= 20 || hour < 6) {
             // Carga la escena del mapa con el esquema MapScheme.NORMAL_NIGHT
             mapView.getMapScene().loadScene(MapScheme.NORMAL_NIGHT, new MapScene.LoadSceneCallback() {
                 @Override
                 public void onLoadScene(@Nullable MapError mapError) {
                     if (mapError == null) {
-                        searchExample = new SearchExample(MainActivity.this, mapView);
+                        // No se produjo ningún error al cargar la escena del mapa
                     } else {
                         Log.d("loadMapScene()", "Loading map failed: mapError: " + mapError.name());
                     }
@@ -230,19 +231,15 @@ public class MainActivity extends AppCompatActivity implements PlatformPositioni
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
         switch (requestCode) {
             case REQUEST_INTERNET_PERMISSION:
+            case REQUEST_LOCATION_PERMISSION:
                 if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
                     // El permiso de Internet fue concedido
                 } else {
                     // El permiso de Internet fue denegado
                 }
                 break;
-            case REQUEST_LOCATION_PERMISSION:
-                if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                    // El permiso de localización fue concedido
-                } else {
-                    // El permiso de localización fue denegado
-                }
-                break;
+            // El permiso de localización fue concedido
+            // El permiso de localización fue denegado
         }
     }
 
@@ -259,7 +256,7 @@ public class MainActivity extends AppCompatActivity implements PlatformPositioni
     @Override
     public void onLocationUpdated(Location location) {
         // Actualiza la posición del usuario en el mapa
-        updateMapUserLocation(location.getLatitude(), location.getLongitude());
+        //updateMapUserLocation(location.getLatitude(), location.getLongitude());
 
         // Agrega un nuevo indicador de ubicación en las nuevas coordenadas
         GeoCoordinates userCoordinates = new GeoCoordinates(location.getLatitude(), location.getLongitude());

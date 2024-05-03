@@ -15,7 +15,9 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.434"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/linearLayout"></com.here.sdk.mapview.MapView>
+        app:layout_constraintTop_toBottomOf="@+id/linearLayout">
+
+    </com.here.sdk.mapview.MapView>
 
     <LinearLayout
         android:id="@+id/linearLayout"
@@ -45,6 +47,4 @@
             android:onClick="searchExampleButtonClicked"
             app:srcCompat="@android:drawable/ic_menu_search" />
     </LinearLayout>
-
-
 </androidx.constraintlayout.widget.ConstraintLayout>
