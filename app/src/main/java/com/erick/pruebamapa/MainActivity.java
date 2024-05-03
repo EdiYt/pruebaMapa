@@ -8,6 +8,7 @@ import androidx.core.content.ContextCompat;
 
 import android.Manifest;
 import android.content.Context;
+import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.location.Location;
 import android.location.LocationManager;
@@ -57,7 +58,8 @@ public class MainActivity extends AppCompatActivity implements PlatformPositioni
     private ImageButton botonBuscar;
     private EditText cajaBusqueda;
     private SearchExample searchExample;
-    private String textoIngresado;
+    private String textoIngresado = "";
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -69,6 +71,7 @@ public class MainActivity extends AppCompatActivity implements PlatformPositioni
         // Creamos la instancia del mapa
         mapView = findViewById(R.id.map_view);
         mapView.onCreate(savedInstanceState);
+        searchExample = new SearchExample(MainActivity.this, mapView);
         loadMapScene();
 
         // Solicitar permisos de internet y de localización
@@ -78,19 +81,10 @@ public class MainActivity extends AppCompatActivity implements PlatformPositioni
         // Initialize positioning provider
         positioningProvider = new PlatformPositioningProvider(this);
 
+    }
 
-
-
-        cajaBusqueda = findViewById(R.id.cajaBusqueda);
-        textoIngresado = cajaBusqueda.getText().toString();
-
-
-        botonBuscar = findViewById(R.id.botonBuscar);
-        botonBuscar.setOnClickListener(v -> {
-            textoIngresado = cajaBusqueda.getText().toString();
-        });
-        
-        Log.i("Caja de busqueda:", textoIngresado);
+    public void searchExampleButtonClicked(View view) {
+        searchExample.onSearchButtonClicked();
     }
 
     // Método que se pasa al oncreate
@@ -142,7 +136,7 @@ public class MainActivity extends AppCompatActivity implements PlatformPositioni
                 @Override
                 public void onLoadScene(@Nullable MapError mapError) {
                     if (mapError == null) {
-                        // No se produjo ningún error al cargar la escena del mapa
+                        searchExample = new SearchExample(MainActivity.this, mapView);
                     } else {
                         Log.d("loadMapScene()", "Loading map failed: mapError: " + mapError.name());
                     }
@@ -247,7 +241,7 @@ public class MainActivity extends AppCompatActivity implements PlatformPositioni
     @Override
     public void onLocationUpdated(Location location) {
         // Actualiza la posición del usuario en el mapa
-        updateMapUserLocation(location.getLatitude(), location.getLongitude());
+        // updateMapUserLocation(location.getLatitude(), location.getLongitude());
 
         // Agrega un nuevo indicador de ubicación en las nuevas coordenadas
         GeoCoordinates userCoordinates = new GeoCoordinates(location.getLatitude(), location.getLongitude());
