@@ -13,7 +13,7 @@
         android:layout_marginTop="15dp"
         android:background="#7F808080"
         android:orientation="horizontal"
-        android:visibility="gone"
+        android:visibility="visible"
         android:elevation="2dp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
@@ -26,7 +26,7 @@
             android:backgroundTint="#FFFFFF"
             android:ems="10"
             android:hint="Ingresa el radio deseado"
-            android:inputType="text"
+            android:inputType="number"
             tools:text="Name" />
 
         <ImageButton

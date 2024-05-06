@@ -74,13 +74,18 @@ public class MainActivity extends AppCompatActivity implements PlatformPositioni
         mapView.onCreate(savedInstanceState);
         searchExample = new SearchExample(MainActivity.this, mapView);
         loadMapScene();
-
+        tiltMap();
 
         // Solicitar permisos de internet y de localización
         requestInternetPermission();
         requestLocationPermission();
-        if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
-            getCurrentLocation();
+        getCurrentLocation();
+
+        if (!isGPSEnabled()) {
+            // El GPS está apagado, muestra un mensaje o realiza las acciones necesarias
+            showGPSDisabledDialog();
+        } else {
+            // El GPS está encendido, continúa con la lógica de tu aplicación
         }
 
         // Initialize positioning provider
@@ -130,9 +135,6 @@ public class MainActivity extends AppCompatActivity implements PlatformPositioni
                 }
             }
         });
-        showGPSDisabledDialog();
-        isGPSEnabled();
-        tiltMap();
     }
 
     private void showGPSDisabledDialog() {
