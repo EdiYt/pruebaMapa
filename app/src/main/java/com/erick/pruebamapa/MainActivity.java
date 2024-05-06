@@ -2,49 +2,48 @@ package com.erick.pruebamapa;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 
 import android.Manifest;
 import android.content.Context;
-import android.content.SharedPreferences;
+import android.content.DialogInterface;
+import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.location.Location;
 import android.location.LocationManager;
 import android.os.Bundle;
+import android.provider.Settings;
 import android.util.Log;
 import android.view.View;
-import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageButton;
+import android.widget.LinearLayout;
 import android.widget.Toast;
 
-import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.here.sdk.core.Color;
+import com.here.sdk.core.GeoCircle;
 import com.here.sdk.core.GeoCoordinates;
 import com.here.sdk.core.GeoCoordinatesUpdate;
 import com.here.sdk.core.GeoOrientationUpdate;
-import com.here.sdk.core.GeoPolyline;
+import com.here.sdk.core.GeoPolygon;
 import com.here.sdk.core.engine.SDKNativeEngine;
 import com.here.sdk.core.engine.SDKOptions;
 import com.here.sdk.core.errors.InstantiationErrorException;
-import com.here.sdk.mapview.LineCap;
 import com.here.sdk.mapview.LocationIndicator;
 import com.here.sdk.mapview.MapCamera;
 import com.here.sdk.mapview.MapCameraAnimation;
 import com.here.sdk.mapview.MapCameraAnimationFactory;
 import com.here.sdk.mapview.MapError;
 import com.here.sdk.mapview.MapMeasure;
-import com.here.sdk.mapview.MapMeasureDependentRenderSize;
-import com.here.sdk.mapview.MapPolyline;
+import com.here.sdk.mapview.MapPolygon;
 import com.here.sdk.mapview.MapScene;
 import com.here.sdk.mapview.MapScheme;
 import com.here.sdk.mapview.MapView;
-import com.here.sdk.mapview.RenderSize;
 import com.here.time.Duration;
 
-import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
 
@@ -57,10 +56,10 @@ public class MainActivity extends AppCompatActivity implements PlatformPositioni
     private MapCamera mapCamera;
     private PlatformPositioningProvider positioningProvider;
     private LocationIndicator currentLocationIndicator;
-    private ImageButton botonBuscar, regresarUbicacion;
-    private EditText cajaBusqueda;
+    private ImageButton botonBuscar, regresarUbicacion, botonRadio;
+    private EditText cajaBusqueda, textoRadio;
     private SearchExample searchExample;
-    private String textoIngresado = "";
+    private LinearLayout layoutRadio;
 
 
     @Override
@@ -76,9 +75,13 @@ public class MainActivity extends AppCompatActivity implements PlatformPositioni
         searchExample = new SearchExample(MainActivity.this, mapView);
         loadMapScene();
 
+
         // Solicitar permisos de internet y de localización
         requestInternetPermission();
         requestLocationPermission();
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
+            getCurrentLocation();
+        }
 
         // Initialize positioning provider
         positioningProvider = new PlatformPositioningProvider(this);
@@ -111,7 +114,57 @@ public class MainActivity extends AppCompatActivity implements PlatformPositioni
                 moverCamaraAUbicacionActual();
             }
         });
+
+        layoutRadio = findViewById(R.id.layoutRadio);
+        botonRadio = findViewById(R.id.botonRadio);
+        textoRadio = findViewById(R.id.textoRadio);
+
+
+        botonRadio.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (layoutRadio.getVisibility() == View.GONE) {
+                    layoutRadio.setVisibility(View.VISIBLE);
+                } else {
+                    layoutRadio.setVisibility(View.GONE);
+                }
+            }
+        });
+        showGPSDisabledDialog();
+        isGPSEnabled();
+        tiltMap();
     }
+
+    private void showGPSDisabledDialog() {
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setTitle("GPS desactivado");
+        builder.setMessage("El GPS está desactivado. ¿Desea activarlo?");
+        builder.setPositiveButton("Activar GPS", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                // Abrir la configuración de ubicación del dispositivo
+                Intent intent = new Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS);
+                startActivity(intent);
+            }
+        });
+        builder.setNegativeButton("Cancelar", null);
+        builder.show();
+    }
+
+    private boolean isGPSEnabled() {
+        LocationManager locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
+        return locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER);
+    }
+
+    private MapPolygon createMapCircle(double latitude, double longitude) {
+        float radiusInMeters = 300; // Ajusta el radio según tus necesidades
+        GeoCircle geoCircle = new GeoCircle(new GeoCoordinates(latitude, longitude), radiusInMeters);
+        GeoPolygon geoPolygon = new GeoPolygon(geoCircle);
+        Color fillColor = Color.valueOf(0, 0.56f, 0.54f, 0.63f); // RGBA
+        MapPolygon mapPolygon = new MapPolygon(geoPolygon, fillColor);
+        return mapPolygon;
+    }
+
 
     private void moverCamaraAUbicacionActual() {
         // Verifica si tienes permisos para acceder a la ubicación del usuario
@@ -127,12 +180,18 @@ public class MainActivity extends AppCompatActivity implements PlatformPositioni
         }
     }
 
-    private void flyTo(GeoCoordinates geoCoordinates) {
-        GeoCoordinatesUpdate geoCoordinatesUpdate = new GeoCoordinatesUpdate(geoCoordinates);
-        double bowFactor = 1;
-        MapCameraAnimation animation =
-                MapCameraAnimationFactory.flyTo(geoCoordinatesUpdate, bowFactor, Duration.ofSeconds(3));
-        mapCamera.startAnimation(animation);
+    private void getCurrentLocation() {
+        LocationManager locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
+        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            // Solicitar permisos de ubicación al usuario
+            return;
+        }
+        Location currentLocation = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
+        if (currentLocation != null) {
+            double latitude = currentLocation.getLatitude();
+            double longitude = currentLocation.getLongitude();
+            createMapCircle(latitude, longitude);
+        }
     }
 
     public void searchExampleButtonClicked(View view) {
@@ -294,12 +353,6 @@ public class MainActivity extends AppCompatActivity implements PlatformPositioni
         // Agrega un nuevo indicador de ubicación en las nuevas coordenadas
         GeoCoordinates userCoordinates = new GeoCoordinates(location.getLatitude(), location.getLongitude());
         addLocationIndicator(userCoordinates, LocationIndicator.IndicatorStyle.PEDESTRIAN);
-    }
-
-
-    private void updateMapUserLocation(double latitude, double longitude) {
-        GeoCoordinates userCoordinates = new GeoCoordinates(latitude, longitude);
-        mapView.getCamera().lookAt(userCoordinates);
     }
 
     private void addLocationIndicator(GeoCoordinates geoCoordinates,

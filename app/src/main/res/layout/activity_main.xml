@@ -6,6 +6,52 @@
     android:layout_height="match_parent"
     tools:context=".MainActivity">
 
+    <LinearLayout
+        android:id="@+id/layoutRadio"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="15dp"
+        android:background="#7F808080"
+        android:orientation="horizontal"
+        android:visibility="gone"
+        android:elevation="2dp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/linearLayout">
+
+        <EditText
+            android:id="@+id/textoRadio"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:backgroundTint="#FFFFFF"
+            android:ems="10"
+            android:hint="Ingresa el radio deseado"
+            android:inputType="text"
+            tools:text="Name" />
+
+        <ImageButton
+            android:id="@+id/botonLimite"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:backgroundTint="#00FFFFFF"
+            android:src="@android:drawable/ic_menu_search" />
+
+    </LinearLayout>
+
+    <ImageButton
+        android:id="@+id/botonRadio"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="335dp"
+        android:layout_marginBottom="15dp"
+        android:background="#00FFFFFF"
+        android:backgroundTint="#00FFFFFF"
+        android:elevation="2dp"
+        app:layout_constraintBottom_toTopOf="@+id/regresarUbicacion"
+        app:layout_constraintStart_toStartOf="parent"
+        app:srcCompat="@drawable/radio" />
+
     <ImageButton
         android:id="@+id/regresarUbicacion"
         android:layout_width="wrap_content"
@@ -28,6 +74,7 @@
         app:layout_constraintHorizontal_bias="0.434"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/linearLayout">
+
     </com.here.sdk.mapview.MapView>
 
     <LinearLayout
