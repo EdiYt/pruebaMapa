@@ -13,7 +13,7 @@
         android:layout_marginTop="15dp"
         android:background="#7F808080"
         android:orientation="horizontal"
-        android:visibility="visible"
+        android:visibility="gone"
         android:elevation="2dp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"

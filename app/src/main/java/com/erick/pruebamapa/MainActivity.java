@@ -26,7 +26,6 @@ import android.widget.Toast;
 import com.here.sdk.core.Color;
 import com.here.sdk.core.GeoCircle;
 import com.here.sdk.core.GeoCoordinates;
-import com.here.sdk.core.GeoCoordinatesUpdate;
 import com.here.sdk.core.GeoOrientationUpdate;
 import com.here.sdk.core.GeoPolygon;
 import com.here.sdk.core.engine.SDKNativeEngine;
@@ -34,15 +33,12 @@ import com.here.sdk.core.engine.SDKOptions;
 import com.here.sdk.core.errors.InstantiationErrorException;
 import com.here.sdk.mapview.LocationIndicator;
 import com.here.sdk.mapview.MapCamera;
-import com.here.sdk.mapview.MapCameraAnimation;
-import com.here.sdk.mapview.MapCameraAnimationFactory;
+import com.here.sdk.mapview.MapPolygon;
 import com.here.sdk.mapview.MapError;
 import com.here.sdk.mapview.MapMeasure;
-import com.here.sdk.mapview.MapPolygon;
 import com.here.sdk.mapview.MapScene;
 import com.here.sdk.mapview.MapScheme;
 import com.here.sdk.mapview.MapView;
-import com.here.time.Duration;
 
 import java.util.Calendar;
 import java.util.Date;
@@ -60,6 +56,8 @@ public class MainActivity extends AppCompatActivity implements PlatformPositioni
     private EditText cajaBusqueda, textoRadio;
     private SearchExample searchExample;
     private LinearLayout layoutRadio;
+    private MapPolygon mapCircle;
+    private MapScene mapScene;
 
 
     @Override
@@ -79,7 +77,11 @@ public class MainActivity extends AppCompatActivity implements PlatformPositioni
         // Solicitar permisos de internet y de localización
         requestInternetPermission();
         requestLocationPermission();
-        getCurrentLocation();
+
+        mapScene = mapView.getMapScene();
+
+
+
 
         if (!isGPSEnabled()) {
             // El GPS está apagado, muestra un mensaje o realiza las acciones necesarias
@@ -120,10 +122,11 @@ public class MainActivity extends AppCompatActivity implements PlatformPositioni
             }
         });
 
+
+
         layoutRadio = findViewById(R.id.layoutRadio);
         botonRadio = findViewById(R.id.botonRadio);
         textoRadio = findViewById(R.id.textoRadio);
-
 
         botonRadio.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -133,9 +136,52 @@ public class MainActivity extends AppCompatActivity implements PlatformPositioni
                 } else {
                     layoutRadio.setVisibility(View.GONE);
                 }
+                String textoRad = textoRadio.getText().toString();
+                if (!textoRad.isEmpty()) {
+                    double radio = Double.parseDouble(textoRad);
+                    LocationManager locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
+                    if (locationManager != null && ActivityCompat.checkSelfPermission(MainActivity.this, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
+                        Location lastKnownLocation = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
+                        if (lastKnownLocation != null) {
+                            GeoCoordinates userCoordinates = new GeoCoordinates(lastKnownLocation.getLatitude(), lastKnownLocation.getLongitude());
+                            if (mapScene != null) {
+                                showMapCircle(userCoordinates, (float) radio * 1000);
+                            } else {
+                                // Manejar el caso en que mapScene sea nulo
+                            }
+                        }
+                    }
+                } else {
+                    // Manejar el caso en que el EditText esté vacío
+                    Toast.makeText(MainActivity.this, "Por favor ingrese un valor de radio.", Toast.LENGTH_SHORT).show();
+                }
             }
         });
     }
+
+    public void showMapCircle(GeoCoordinates centerCoordinates, float radius) {
+        // Primero verifica si hay un MapPolygon existente y lo elimina
+        if (mapCircle != null) {
+            mapScene.removeMapPolygon(mapCircle);
+        }
+
+        // Crea el nuevo MapPolygon
+        mapCircle = createMapCircle(centerCoordinates, radius);
+
+        // Agrega el nuevo MapPolygon al mapScene
+        mapScene.addMapPolygon(mapCircle);
+    }
+
+    private MapPolygon createMapCircle(GeoCoordinates centerCoordinates, float radiusInMeters) {
+        GeoCircle geoCircle = new GeoCircle(centerCoordinates, radiusInMeters);
+
+        GeoPolygon geoPolygon = new GeoPolygon(geoCircle);
+        Color fillColor = Color.valueOf(240, 128, 0.50f, 0.45f); // RGBA
+        MapPolygon mapPolygon = new MapPolygon(geoPolygon, fillColor);
+
+        return mapPolygon;
+    }
+
 
     private void showGPSDisabledDialog() {
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
@@ -158,15 +204,6 @@ public class MainActivity extends AppCompatActivity implements PlatformPositioni
         return locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER);
     }
 
-    private MapPolygon createMapCircle(double latitude, double longitude) {
-        float radiusInMeters = 300; // Ajusta el radio según tus necesidades
-        GeoCircle geoCircle = new GeoCircle(new GeoCoordinates(latitude, longitude), radiusInMeters);
-        GeoPolygon geoPolygon = new GeoPolygon(geoCircle);
-        Color fillColor = Color.valueOf(0, 0.56f, 0.54f, 0.63f); // RGBA
-        MapPolygon mapPolygon = new MapPolygon(geoPolygon, fillColor);
-        return mapPolygon;
-    }
-
 
     private void moverCamaraAUbicacionActual() {
         // Verifica si tienes permisos para acceder a la ubicación del usuario
@@ -182,19 +219,7 @@ public class MainActivity extends AppCompatActivity implements PlatformPositioni
         }
     }
 
-    private void getCurrentLocation() {
-        LocationManager locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
-        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-            // Solicitar permisos de ubicación al usuario
-            return;
-        }
-        Location currentLocation = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
-        if (currentLocation != null) {
-            double latitude = currentLocation.getLatitude();
-            double longitude = currentLocation.getLongitude();
-            createMapCircle(latitude, longitude);
-        }
-    }
+
 
     public void searchExampleButtonClicked(View view) {
         searchExample.onSearchButtonClicked();
@@ -349,12 +374,19 @@ public class MainActivity extends AppCompatActivity implements PlatformPositioni
 
     @Override
     public void onLocationUpdated(Location location) {
-        // Actualiza la posición del usuario en el mapa
-        //updateMapUserLocation(location.getLatitude(), location.getLongitude());
-
-        // Agrega un nuevo indicador de ubicación en las nuevas coordenadas
         GeoCoordinates userCoordinates = new GeoCoordinates(location.getLatitude(), location.getLongitude());
         addLocationIndicator(userCoordinates, LocationIndicator.IndicatorStyle.PEDESTRIAN);
+
+        // Obtén el radio desde el EditText textoRadio
+        String textoRad = textoRadio.getText().toString();
+        if (!textoRad.isEmpty()) {
+            double radio = Double.parseDouble(textoRad);
+            if (mapScene != null) {
+                showMapCircle(userCoordinates, (float) radio * 1000);
+            } else {
+                // Manejar el caso en que mapScene sea nulo
+            }
+        }
     }
 
     private void addLocationIndicator(GeoCoordinates geoCoordinates,
