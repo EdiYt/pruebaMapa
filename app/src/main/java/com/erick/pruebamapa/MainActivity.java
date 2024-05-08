@@ -80,14 +80,11 @@ public class MainActivity extends AppCompatActivity implements PlatformPositioni
 
         mapScene = mapView.getMapScene();
 
-
-
-
         if (!isGPSEnabled()) {
-            // El GPS está apagado, muestra un mensaje o realiza las acciones necesarias
+            // Si el GPS está apagado, muestra un mensaje o realiza las acciones necesarias para que prenda el GPS
             showGPSDisabledDialog();
         } else {
-            // El GPS está encendido, continúa con la lógica de tu aplicación
+            // El GPS está encendido
         }
 
         // Initialize positioning provider
@@ -121,8 +118,6 @@ public class MainActivity extends AppCompatActivity implements PlatformPositioni
                 moverCamaraAUbicacionActual();
             }
         });
-
-
 
         layoutRadio = findViewById(R.id.layoutRadio);
         botonRadio = findViewById(R.id.botonRadio);
@@ -212,7 +207,7 @@ public class MainActivity extends AppCompatActivity implements PlatformPositioni
         builder.setPositiveButton("Activar GPS", new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialog, int which) {
-                // Abrir la configuración de ubicación del dispositivo
+                // Abrimos la configuración de ubicación del dispositivo para que el usuario la active
                 Intent intent = new Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS);
                 startActivity(intent);
             }
@@ -278,7 +273,7 @@ public class MainActivity extends AppCompatActivity implements PlatformPositioni
     private void loadMapScene() {
         // Verifica si tienes permisos para acceder a la ubicación del usuario
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
-            // Obtén la última ubicación conocida del usuario
+            // Obtiene la última ubicación conocida del usuario
             LocationManager locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
             Location lastKnownLocation = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
             if (lastKnownLocation != null) {
@@ -296,7 +291,6 @@ public class MainActivity extends AppCompatActivity implements PlatformPositioni
                 @Override
                 public void onLoadScene(@Nullable MapError mapError) {
                     if (mapError == null) {
-                        // No se produjo ningún error al cargar la escena del mapa
                     } else {
                         Log.d("loadMapScene()", "Loading map failed: mapError: " + mapError.name());
                     }
@@ -308,7 +302,6 @@ public class MainActivity extends AppCompatActivity implements PlatformPositioni
                 @Override
                 public void onLoadScene(@Nullable MapError mapError) {
                     if (mapError == null) {
-                        // No se produjo ningún error al cargar la escena del mapa
                     } else {
                         Log.d("loadMapScene()", "Loading map failed: mapError: " + mapError.name());
                     }
@@ -408,9 +401,6 @@ public class MainActivity extends AppCompatActivity implements PlatformPositioni
         // Crea un nuevo indicador de ubicación
         LocationIndicator locationIndicator = new LocationIndicator();
         locationIndicator.setLocationIndicatorStyle(indicatorStyle);
-
-        // A LocationIndicator is intended to mark the user's current location,
-        // including a bearing direction.
         com.here.sdk.core.Location location = new com.here.sdk.core.Location(geoCoordinates);
         location.time = new Date();
         location.bearingInDegrees = getRandom(0, 360);
