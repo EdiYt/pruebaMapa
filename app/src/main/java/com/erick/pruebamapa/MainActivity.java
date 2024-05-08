@@ -52,7 +52,7 @@ public class MainActivity extends AppCompatActivity implements PlatformPositioni
     private MapCamera mapCamera;
     private PlatformPositioningProvider positioningProvider;
     private LocationIndicator currentLocationIndicator;
-    private ImageButton botonBuscar, regresarUbicacion, botonRadio;
+    private ImageButton botonBuscar, regresarUbicacion, botonLimite, botonEliminar, botonRadio;
     private EditText cajaBusqueda, textoRadio;
     private SearchExample searchExample;
     private LinearLayout layoutRadio;
@@ -127,6 +127,8 @@ public class MainActivity extends AppCompatActivity implements PlatformPositioni
         layoutRadio = findViewById(R.id.layoutRadio);
         botonRadio = findViewById(R.id.botonRadio);
         textoRadio = findViewById(R.id.textoRadio);
+        botonEliminar = findViewById(R.id.botonEliminar);
+        botonLimite = findViewById(R.id.botonLimite);
 
         botonRadio.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -136,24 +138,44 @@ public class MainActivity extends AppCompatActivity implements PlatformPositioni
                 } else {
                     layoutRadio.setVisibility(View.GONE);
                 }
+            }
+        });
+
+        botonLimite.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
                 String textoRad = textoRadio.getText().toString();
                 if (!textoRad.isEmpty()) {
                     double radio = Double.parseDouble(textoRad);
-                    LocationManager locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
-                    if (locationManager != null && ActivityCompat.checkSelfPermission(MainActivity.this, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
-                        Location lastKnownLocation = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
-                        if (lastKnownLocation != null) {
-                            GeoCoordinates userCoordinates = new GeoCoordinates(lastKnownLocation.getLatitude(), lastKnownLocation.getLongitude());
-                            if (mapScene != null) {
-                                showMapCircle(userCoordinates, (float) radio * 1000);
-                            } else {
-                                // Manejar el caso en que mapScene sea nulo
+                    if (radio <= 5000) {
+                        LocationManager locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
+                        if (locationManager != null && ActivityCompat.checkSelfPermission(MainActivity.this, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
+                            Location lastKnownLocation = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
+                            if (lastKnownLocation != null) {
+                                GeoCoordinates userCoordinates = new GeoCoordinates(lastKnownLocation.getLatitude(), lastKnownLocation.getLongitude());
+                                if (mapScene != null) {
+                                    showMapCircle(userCoordinates, (float) radio);
+                                } else {
+                                    // Manejar el caso en que mapScene sea nulo
+                                }
                             }
                         }
+                    } else {
+                        Toast.makeText(MainActivity.this, "El radio máximo permitido es de 5000 metros.", Toast.LENGTH_SHORT).show();
                     }
                 } else {
                     // Manejar el caso en que el EditText esté vacío
                     Toast.makeText(MainActivity.this, "Por favor ingrese un valor de radio.", Toast.LENGTH_SHORT).show();
+                }
+            }
+        });
+
+        botonEliminar.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (mapCircle != null) {
+                    mapScene.removeMapPolygon(mapCircle);
+                    mapCircle = null;
                 }
             }
         });
@@ -376,17 +398,6 @@ public class MainActivity extends AppCompatActivity implements PlatformPositioni
     public void onLocationUpdated(Location location) {
         GeoCoordinates userCoordinates = new GeoCoordinates(location.getLatitude(), location.getLongitude());
         addLocationIndicator(userCoordinates, LocationIndicator.IndicatorStyle.PEDESTRIAN);
-
-        // Obtén el radio desde el EditText textoRadio
-        String textoRad = textoRadio.getText().toString();
-        if (!textoRad.isEmpty()) {
-            double radio = Double.parseDouble(textoRad);
-            if (mapScene != null) {
-                showMapCircle(userCoordinates, (float) radio * 1000);
-            } else {
-                // Manejar el caso en que mapScene sea nulo
-            }
-        }
     }
 
     private void addLocationIndicator(GeoCoordinates geoCoordinates,
