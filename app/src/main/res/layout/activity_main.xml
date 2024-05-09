@@ -6,6 +6,95 @@
     android:layout_height="match_parent"
     tools:context=".MainActivity">
 
+    <ImageButton
+        android:id="@+id/botonBuscarRuta"
+        android:layout_width="50dp"
+        android:layout_height="50dp"
+        android:layout_marginTop="35dp"
+        android:background="#7F808080"
+        android:elevation="2dp"
+        android:src="@android:drawable/ic_menu_search"
+        android:visibility="gone"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toEndOf="@+id/rutaLayout"
+        app:layout_constraintTop_toBottomOf="@+id/layoutRadio" />
+
+    <LinearLayout
+        android:id="@+id/rutaLayout"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="15dp"
+        android:layout_marginEnd="90dp"
+        android:background="#7F808080"
+        android:elevation="2dp"
+        android:orientation="vertical"
+        android:visibility="gone"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/layoutRadio">
+
+        <EditText
+            android:id="@+id/coordenada1"
+            android:layout_width="250dp"
+            android:layout_height="wrap_content"
+            android:layout_margin="10dp"
+            android:background="#00FFFFFF"
+            android:backgroundTint="#00FFFFFF"
+            android:elevation="2dp"
+            android:ems="10"
+            android:hint="Ingresa una direccion A"
+            android:inputType="text"
+            tools:text="Name" />
+
+        <EditText
+            android:id="@+id/coordenada2"
+            android:layout_width="250dp"
+            android:layout_height="wrap_content"
+            android:layout_margin="10dp"
+            android:background="#00FFFFFF"
+            android:backgroundTint="#00FFFFFF"
+            android:elevation="2dp"
+            android:ems="10"
+            android:hint="Ingresa una direccion B"
+            android:inputType="text"
+            tools:text="Name" />
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/linearLayout"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="15dp"
+        android:background="#7F808080"
+        android:orientation="horizontal"
+        android:elevation="2dp"
+        android:visibility="gone"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent">
+
+        <EditText
+            android:id="@+id/cajaBusqueda"
+            android:layout_width="308dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:backgroundTint="#FFFFFF"
+            android:ems="10"
+            android:hint="Ingresa la dirección a buscar"
+            android:inputType="text"
+            android:textColor="@color/black"
+            tools:text="Name" />
+
+        <ImageButton
+            android:id="@+id/botonBuscar"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:backgroundTint="#00FFFFFF"
+            android:onClick="searchExampleButtonClicked"
+            app:srcCompat="@android:drawable/ic_menu_search" />
+    </LinearLayout>
+
     <LinearLayout
         android:id="@+id/layoutRadio"
         android:layout_width="wrap_content"
@@ -21,11 +110,11 @@
 
         <EditText
             android:id="@+id/textoRadio"
-            android:layout_width="wrap_content"
+            android:layout_width="250dp"
             android:layout_height="wrap_content"
             android:backgroundTint="#FFFFFF"
             android:ems="10"
-            android:hint="Ingresa el radio deseado"
+            android:hint="Ingresa el radio en metros"
             android:inputType="number"
             tools:text="Name" />
 
@@ -51,14 +140,27 @@
         android:id="@+id/botonRadio"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginStart="335dp"
+        android:layout_marginStart="340dp"
         android:layout_marginBottom="15dp"
         android:background="#00FFFFFF"
         android:backgroundTint="#00FFFFFF"
         android:elevation="2dp"
-        app:layout_constraintBottom_toTopOf="@+id/regresarUbicacion"
+        app:layout_constraintBottom_toTopOf="@+id/buscarDireccion"
         app:layout_constraintStart_toStartOf="parent"
         app:srcCompat="@drawable/radio" />
+
+    <ImageButton
+        android:id="@+id/botonRuta"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="338dp"
+        android:layout_marginBottom="15dp"
+        android:background="#00FFFFFF"
+        android:backgroundTint="#00FFFFFF"
+        android:elevation="2dp"
+        app:layout_constraintBottom_toTopOf="@+id/botonRadio"
+        app:layout_constraintStart_toStartOf="parent"
+        app:srcCompat="@drawable/ruta" />
 
     <ImageButton
         android:id="@+id/regresarUbicacion"
@@ -73,6 +175,19 @@
         app:layout_constraintStart_toStartOf="parent"
         app:srcCompat="@drawable/navegacion" />
 
+    <ImageButton
+        android:id="@+id/buscarDireccion"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="340dp"
+        android:layout_marginBottom="15dp"
+        android:background="#00FFFFFF"
+        android:backgroundTint="#00FFFFFF"
+        android:elevation="2dp"
+        app:layout_constraintBottom_toTopOf="@+id/regresarUbicacion"
+        app:layout_constraintStart_toStartOf="parent"
+        app:srcCompat="@drawable/direccion" />
+
     <com.here.sdk.mapview.MapView
         android:id="@+id/map_view"
         android:layout_width="match_parent"
@@ -85,36 +200,4 @@
 
     </com.here.sdk.mapview.MapView>
 
-    <LinearLayout
-        android:id="@+id/linearLayout"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="15dp"
-        android:background="#7F808080"
-        android:orientation="horizontal"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent">
-
-        <EditText
-            android:id="@+id/cajaBusqueda"
-            android:layout_width="308dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:backgroundTint="#FFFFFF"
-            android:ems="10"
-            android:inputType="text"
-            android:hint="Ingresa la dirección a buscar"
-            android:textColor="@color/black"
-            tools:text="Name" />
-
-        <ImageButton
-            android:id="@+id/botonBuscar"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:backgroundTint="#00FFFFFF"
-            android:onClick="searchExampleButtonClicked"
-            app:srcCompat="@android:drawable/ic_menu_search" />
-    </LinearLayout>
 </androidx.constraintlayout.widget.ConstraintLayout>

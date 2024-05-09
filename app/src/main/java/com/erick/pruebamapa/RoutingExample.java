@@ -75,35 +75,13 @@ public class RoutingExample {
     private GeoCoordinates startGeoCoordinates;
     private GeoCoordinates destinationGeoCoordinates;
 
-    public void addRoute(GeoCoordinates startCoordinates, GeoCoordinates destinationCoordinates) {
-        Waypoint startWaypoint = new Waypoint(startCoordinates);
-        Waypoint destinationWaypoint = new Waypoint(destinationCoordinates);
-
-        List<Waypoint> waypoints = new ArrayList<>(Arrays.asList(startWaypoint, destinationWaypoint));
-
-        CarOptions carOptions = new CarOptions();
-        routingEngine.calculateRoute(waypoints, carOptions, routeCalculationCallback);
-    }
-
-    private final CalculateRouteCallback routeCalculationCallback = new CalculateRouteCallback() {
-        @Override
-        public void onRouteCalculated(@Nullable RoutingError routingError, @Nullable List<Route> routes) {
-            if (routingError == null) {
-                Route route = routes.get(0);
-                showRouteOnMap(route);
-            } else {
-                showDialog("Error while calculating a route:", routingError.toString());
-            }
-        }
-    };
-
-    public RoutingExample(Context context, MapView mapView) {
+    public RoutingExample(Context context, MapView mapView,GeoCoordinates coordendas) {
         this.context = context;
         this.mapView = mapView;
         MapCamera camera = mapView.getCamera();
-        double distanceInMeters = 1000 * 10;
+        double distanceInMeters = 700;
         MapMeasure mapMeasureZoom = new MapMeasure(MapMeasure.Kind.DISTANCE, distanceInMeters);
-        camera.lookAt(new GeoCoordinates(52.520798, 13.409408), mapMeasureZoom);
+        camera.lookAt(coordendas, mapMeasureZoom);
 
         try {
             routingEngine = new RoutingEngine();
@@ -112,9 +90,10 @@ public class RoutingExample {
         }
     }
 
-    public void addRoute() {
-        startGeoCoordinates = createRandomGeoCoordinatesAroundMapCenter();
-        destinationGeoCoordinates = createRandomGeoCoordinatesAroundMapCenter();
+    public void addRoute(GeoCoordinates coordenadas_iniciales,GeoCoordinates coordenadas_destino) {
+        clearRoute();
+        startGeoCoordinates = coordenadas_iniciales;
+        destinationGeoCoordinates = coordenadas_destino;
         Waypoint startWaypoint = new Waypoint(startGeoCoordinates);
         Waypoint destinationWaypoint = new Waypoint(destinationGeoCoordinates);
 
@@ -203,11 +182,11 @@ public class RoutingExample {
         long estimatedTrafficDelayInSeconds = route.getTrafficDelay().getSeconds();
         int lengthInMeters = route.getLengthInMeters();
 
-        String routeDetails = "Travel Time: " + formatTime(estimatedTravelTimeInSeconds)
-                + ", traffic delay: " + formatTime(estimatedTrafficDelayInSeconds)
-                + ", Length: " + formatLength(lengthInMeters);
+        String routeDetails = "Tiempo de viaje: " + formatTime(estimatedTravelTimeInSeconds)
+                + ", Tráfico: " + formatTime(estimatedTrafficDelayInSeconds)
+                + ", Distancia: " + formatLength(lengthInMeters);
 
-        showDialog("Route Details", routeDetails);
+        showDialog("Detalles de la ruta", routeDetails);
     }
 
     private String formatTime(long sec) {
@@ -352,9 +331,9 @@ public class RoutingExample {
                 MapPolyline trafficSpanMapPolyline = null;
                 try {
                     trafficSpanMapPolyline = new MapPolyline(span.getGeometry(), new MapPolyline.SolidRepresentation(
-                                    new MapMeasureDependentRenderSize(RenderSize.Unit.PIXELS, widthInPixels),
-                                    lineColor,
-                                    LineCap.ROUND));
+                            new MapMeasureDependentRenderSize(RenderSize.Unit.PIXELS, widthInPixels),
+                            lineColor,
+                            LineCap.ROUND));
                 }  catch (MapPolyline.Representation.InstantiationException e) {
                     Log.e("MapPolyline Representation Exception:", e.error.name());
                 } catch (MapMeasureDependentRenderSize.InstantiationException e) {

@@ -52,10 +52,10 @@ public class MainActivity extends AppCompatActivity implements PlatformPositioni
     private MapCamera mapCamera;
     private PlatformPositioningProvider positioningProvider;
     private LocationIndicator currentLocationIndicator;
-    private ImageButton botonBuscar, regresarUbicacion, botonLimite, botonEliminar, botonRadio;
+    private ImageButton botonBuscar, regresarUbicacion, botonLimite, botonEliminar, botonRadio, buscarDireccion, botonRuta, botonBuscarRuta;
     private EditText cajaBusqueda, textoRadio;
     private SearchExample searchExample;
-    private LinearLayout layoutRadio;
+    private LinearLayout layoutRadio, linearLayout, rutaLayout;
     private MapPolygon mapCircle;
     private MapScene mapScene;
 
@@ -174,7 +174,40 @@ public class MainActivity extends AppCompatActivity implements PlatformPositioni
                 }
             }
         });
+
+        buscarDireccion = findViewById(R.id.buscarDireccion);
+        linearLayout = findViewById(R.id.linearLayout);
+
+        buscarDireccion.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (linearLayout.getVisibility() == View.GONE) {
+                    linearLayout.setVisibility(View.VISIBLE);
+                } else {
+                    linearLayout.setVisibility(View.GONE);
+                }
+            }
+        });
+
+        rutaLayout = findViewById(R.id.rutaLayout);
+        botonRuta = findViewById(R.id.botonRuta);
+        botonBuscarRuta = findViewById(R.id.botonBuscarRuta);
+
+        botonRuta.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (rutaLayout.getVisibility() == View.GONE && botonBuscarRuta.getVisibility() == View.GONE) {
+                    rutaLayout.setVisibility(View.VISIBLE);
+                    botonBuscarRuta.setVisibility(View.VISIBLE);
+                } else {
+                    rutaLayout.setVisibility(View.GONE);
+                    botonBuscarRuta.setVisibility(View.GONE);
+                }
+            }
+        });
     }
+
+
 
     public void showMapCircle(GeoCoordinates centerCoordinates, float radius) {
         // Primero verifica si hay un MapPolygon existente y lo elimina
@@ -193,7 +226,7 @@ public class MainActivity extends AppCompatActivity implements PlatformPositioni
         GeoCircle geoCircle = new GeoCircle(centerCoordinates, radiusInMeters);
 
         GeoPolygon geoPolygon = new GeoPolygon(geoCircle);
-        Color fillColor = Color.valueOf(240, 128, 0.50f, 0.45f); // RGBA
+        Color fillColor = Color.valueOf(255, 165, 0, 0.5f); // Naranja en RGBA
         MapPolygon mapPolygon = new MapPolygon(geoPolygon, fillColor);
 
         return mapPolygon;

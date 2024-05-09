@@ -83,7 +83,6 @@ public class SearchExample {
         setTapGestureHandler();
         setLongPressGestureHandler();
 
-        Toast.makeText(context,"Long press on map to get the address for that position using reverse geocoding.", Toast.LENGTH_LONG).show();
     }
 
     public void onSearchButtonClicked() {
