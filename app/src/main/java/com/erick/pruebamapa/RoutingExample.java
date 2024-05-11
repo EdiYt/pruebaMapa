@@ -1,4 +1,4 @@
-/*
+package com.erick.pruebamapa;/*
  * Copyright (C) 2019-2024 HERE Europe B.V.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -16,8 +16,6 @@
  * SPDX-License-Identifier: Apache-2.0
  * License-Filename: LICENSE
  */
-
-package com.erick.pruebamapa;
 
 import android.content.Context;
 import android.util.Log;
@@ -75,11 +73,11 @@ public class RoutingExample {
     private GeoCoordinates startGeoCoordinates;
     private GeoCoordinates destinationGeoCoordinates;
 
-    public RoutingExample(Context context, MapView mapView,GeoCoordinates coordendas) {
+    public RoutingExample(Context context, MapView mapView, GeoCoordinates coordendas) {
         this.context = context;
         this.mapView = mapView;
         MapCamera camera = mapView.getCamera();
-        double distanceInMeters = 700;
+        double distanceInMeters = 1000 * 10;
         MapMeasure mapMeasureZoom = new MapMeasure(MapMeasure.Kind.DISTANCE, distanceInMeters);
         camera.lookAt(coordendas, mapMeasureZoom);
 
@@ -182,11 +180,11 @@ public class RoutingExample {
         long estimatedTrafficDelayInSeconds = route.getTrafficDelay().getSeconds();
         int lengthInMeters = route.getLengthInMeters();
 
-        String routeDetails = "Tiempo de viaje: " + formatTime(estimatedTravelTimeInSeconds)
-                + ", Tráfico: " + formatTime(estimatedTrafficDelayInSeconds)
-                + ", Distancia: " + formatLength(lengthInMeters);
+        String routeDetails = "Travel Time: " + formatTime(estimatedTravelTimeInSeconds)
+                + ", traffic delay: " + formatTime(estimatedTrafficDelayInSeconds)
+                + ", Length: " + formatLength(lengthInMeters);
 
-        showDialog("Detalles de la ruta", routeDetails);
+        showDialog("Route Details", routeDetails);
     }
 
     private String formatTime(long sec) {

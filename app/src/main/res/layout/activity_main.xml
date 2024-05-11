@@ -7,12 +7,13 @@
     tools:context=".MainActivity">
 
     <ImageButton
-        android:id="@+id/botonBuscarRuta"
+        android:id="@+id/btn_input_coordenadas"
         android:layout_width="50dp"
         android:layout_height="50dp"
         android:layout_marginTop="35dp"
         android:background="#7F808080"
         android:elevation="2dp"
+        android:onClick="addRouteButtonClicked"
         android:src="@android:drawable/ic_menu_search"
         android:visibility="gone"
         app:layout_constraintEnd_toEndOf="parent"
@@ -34,7 +35,7 @@
         app:layout_constraintTop_toBottomOf="@+id/layoutRadio">
 
         <EditText
-            android:id="@+id/coordenada1"
+            android:id="@+id/coordendas_iniciales_input"
             android:layout_width="250dp"
             android:layout_height="wrap_content"
             android:layout_margin="10dp"
@@ -47,7 +48,7 @@
             tools:text="Name" />
 
         <EditText
-            android:id="@+id/coordenada2"
+            android:id="@+id/coordendas_finales_input"
             android:layout_width="250dp"
             android:layout_height="wrap_content"
             android:layout_margin="10dp"

@@ -1,5 +1,7 @@
 package com.erick.pruebamapa;
 
+import static androidx.constraintlayout.helper.widget.MotionEffect.TAG;
+
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AlertDialog;
@@ -26,22 +28,34 @@ import android.widget.Toast;
 import com.here.sdk.core.Color;
 import com.here.sdk.core.GeoCircle;
 import com.here.sdk.core.GeoCoordinates;
+import com.here.sdk.core.GeoCoordinatesUpdate;
 import com.here.sdk.core.GeoOrientationUpdate;
 import com.here.sdk.core.GeoPolygon;
+import com.here.sdk.core.LanguageCode;
 import com.here.sdk.core.engine.SDKNativeEngine;
 import com.here.sdk.core.engine.SDKOptions;
 import com.here.sdk.core.errors.InstantiationErrorException;
 import com.here.sdk.mapview.LocationIndicator;
 import com.here.sdk.mapview.MapCamera;
+import com.here.sdk.mapview.MapCameraAnimation;
+import com.here.sdk.mapview.MapCameraAnimationFactory;
 import com.here.sdk.mapview.MapPolygon;
 import com.here.sdk.mapview.MapError;
 import com.here.sdk.mapview.MapMeasure;
 import com.here.sdk.mapview.MapScene;
 import com.here.sdk.mapview.MapScheme;
 import com.here.sdk.mapview.MapView;
+import com.here.sdk.search.AddressQuery;
+import com.here.sdk.search.Place;
+import com.here.sdk.search.SearchCallback;
+import com.here.sdk.search.SearchEngine;
+import com.here.sdk.search.SearchError;
+import com.here.sdk.search.SearchOptions;
+import com.here.time.Duration;
 
 import java.util.Calendar;
 import java.util.Date;
+import java.util.List;
 
 public class MainActivity extends AppCompatActivity implements PlatformPositioningProvider.PlatformLocationListener {
 
@@ -52,12 +66,16 @@ public class MainActivity extends AppCompatActivity implements PlatformPositioni
     private MapCamera mapCamera;
     private PlatformPositioningProvider positioningProvider;
     private LocationIndicator currentLocationIndicator;
-    private ImageButton botonBuscar, regresarUbicacion, botonLimite, botonEliminar, botonRadio, buscarDireccion, botonRuta, botonBuscarRuta;
-    private EditText cajaBusqueda, textoRadio;
+    private ImageButton botonBuscar, regresarUbicacion, botonLimite, botonEliminar, botonRadio, buscarDireccion, botonRuta, boton_ruta ;
+    private EditText cajaBusqueda, textoRadio, input_coordenada1, input_coordenada2;
     private SearchExample searchExample;
     private LinearLayout layoutRadio, linearLayout, rutaLayout;
     private MapPolygon mapCircle;
     private MapScene mapScene;
+    private RoutingExample routingExample;
+    private GeoCoordinates coordenada1, coordenada2;
+    private LocationManager locationManager;
+    private SearchEngine searchEngine;
 
 
     @Override
@@ -73,6 +91,11 @@ public class MainActivity extends AppCompatActivity implements PlatformPositioni
         searchExample = new SearchExample(MainActivity.this, mapView);
         loadMapScene();
         tiltMap();
+        try {
+            searchEngine = new SearchEngine();
+        } catch (InstantiationErrorException e) {
+            throw new RuntimeException("Initialization of SearchEngine failed: " + e.error.name());
+        }
 
         // Solicitar permisos de internet y de localización
         requestInternetPermission();
@@ -189,25 +212,188 @@ public class MainActivity extends AppCompatActivity implements PlatformPositioni
             }
         });
 
+
+        Location lastKnownLocation = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
+        GeoCoordinates userCoordinates = new GeoCoordinates(lastKnownLocation.getLatitude(), lastKnownLocation.getLongitude());
         rutaLayout = findViewById(R.id.rutaLayout);
         botonRuta = findViewById(R.id.botonRuta);
-        botonBuscarRuta = findViewById(R.id.botonBuscarRuta);
+
 
         botonRuta.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if (rutaLayout.getVisibility() == View.GONE && botonBuscarRuta.getVisibility() == View.GONE) {
+                if (rutaLayout.getVisibility() == View.GONE && boton_ruta.getVisibility() == View.GONE) {
                     rutaLayout.setVisibility(View.VISIBLE);
-                    botonBuscarRuta.setVisibility(View.VISIBLE);
+                    boton_ruta.setVisibility(View.VISIBLE);
                 } else {
                     rutaLayout.setVisibility(View.GONE);
-                    botonBuscarRuta.setVisibility(View.GONE);
+                    boton_ruta.setVisibility(View.GONE);
+                }
+            }
+        });
+
+        input_coordenada1 = findViewById(R.id.coordendas_iniciales_input);
+        input_coordenada2 = findViewById(R.id.coordendas_finales_input);
+        boton_ruta = findViewById(R.id.btn_input_coordenadas);
+        boton_ruta.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                String direccion1 = input_coordenada1.getText().toString();
+                String direccion2 = input_coordenada2.getText().toString();
+                if (!direccion1.isEmpty() && !direccion2.isEmpty()) {
+                    getCoordenada1(direccion1, mapView.getCamera().getState().targetCoordinates);
+                    getCoordenada2(direccion2, mapView.getCamera().getState().targetCoordinates);
+                } else {
+                    Toast.makeText(MainActivity.this, "Por favor, ingrese ambas direcciones", Toast.LENGTH_SHORT).show();
                 }
             }
         });
     }
 
+    private void getAddressForCoordinates(GeoCoordinates geoCoordinates) {
+        SearchOptions reverseGeocodingOptions = new SearchOptions();
+        reverseGeocodingOptions.languageCode = LanguageCode.EN_GB;
+        reverseGeocodingOptions.maxItems = 1;
 
+        searchEngine.search(geoCoordinates, reverseGeocodingOptions, addressSearchCallback);
+    }
+
+    private final SearchCallback addressSearchCallback = new SearchCallback() {
+        @Override
+        public void onSearchCompleted(@Nullable SearchError searchError, @Nullable List<Place> list) {
+            if (searchError != null) {
+                showDialog("Reverse geocoding", "Error: " + searchError.toString());
+                return;
+            }
+
+            // If error is null, list is guaranteed to be not empty.
+            showDialog("Información de la ubicación:", list.get(0).getAddress().addressText);
+        }
+    };
+
+    private void getAddressForCoordinatess(GeoCoordinates geoCoordinates) {
+        SearchOptions reverseGeocodingOptions = new SearchOptions();
+        reverseGeocodingOptions.languageCode = LanguageCode.EN_GB;
+        reverseGeocodingOptions.maxItems = 1;
+
+        searchEngine.search(geoCoordinates, reverseGeocodingOptions, addresssSearchCallback);
+    }
+
+    private final SearchCallback addresssSearchCallback = new SearchCallback() {
+        @Override
+        public void onSearchCompleted(@Nullable SearchError searchError, @Nullable List<Place> list) {
+            if (searchError != null) {
+                showDialog("Reverse geocoding", "Error: " + searchError.toString());
+                return;
+            }
+
+            // If error is null, list is guaranteed to be not empty.
+            input_coordenada1.setText(list.get(0).getAddress().addressText);
+        }
+    };
+
+    public void getCoordenada1(String queryString, GeoCoordinates geoCoordinates) {
+        AddressQuery query = new AddressQuery(queryString, geoCoordinates);
+        SearchOptions options = new SearchOptions();
+        options.languageCode = LanguageCode.DE_DE;
+        options.maxItems = 1;
+
+        searchEngine.search(query, options, Coordenada1SearchCallback);
+    }
+
+    private void showDialog(String title, String message) {
+        AlertDialog.Builder builder =
+                new AlertDialog.Builder(this);
+        builder.setTitle(title);
+        builder.setMessage(message);
+        builder.show();
+    }
+
+    private final SearchCallback Coordenada1SearchCallback = new SearchCallback() {
+        @Override
+        public void onSearchCompleted(SearchError searchError, List<Place> list) {
+            if (searchError != null) {
+                showDialog("Geocoding", "Error: " + searchError.toString());
+                return;
+            }
+
+            if (list.isEmpty()) {
+                showDialog("Geocoding result", "No se encontraron resultados");
+                return;
+            }
+
+            Place geocodingResult = list.get(0); // Obtener el primer resultado
+            GeoCoordinates geoCoordinates = geocodingResult.getGeoCoordinates();
+            coordenada1 = geoCoordinates; // Guardar las coordenadas obtenidas en la variable global
+            addRouteIfBothCoordinatesAreAvailable(); // Llamar a la función para agregar la ruta si ambas coordenadas están disponibles
+        }
+    };
+
+    private void addRouteIfBothCoordinatesAreAvailable() {
+        // Verificar si ambas coordenadas están disponibles
+        if (coordenada1 != null && coordenada2 != null) {
+            // Ambas coordenadas están disponibles, llamar al método addRoute
+            routingExample.addRoute(coordenada1, coordenada2);
+            flyTo(coordenada1);
+        }
+    }
+
+    private void flyTo(GeoCoordinates geoCoordinates) {
+        GeoCoordinatesUpdate geoCoordinatesUpdate = new GeoCoordinatesUpdate(geoCoordinates);
+        double bowFactor = 1;
+        MapCameraAnimation animation =
+                MapCameraAnimationFactory.flyTo(geoCoordinatesUpdate, bowFactor, Duration.ofSeconds(3));
+        mapCamera.startAnimation(animation);
+    }
+
+    private String coordinatesToString(GeoCoordinates coordinates) {
+        if (coordinates.altitude != null) {
+            return String.format("%.5f, %.5f, %.2f", coordinates.latitude, coordinates.longitude, coordinates.altitude);
+        } else {
+            return String.format("%.5f, %.5f", coordinates.latitude, coordinates.longitude);
+        }
+    }
+
+    public static GeoCoordinates fromString(String coordinatesString) {
+        String[] parts = coordinatesString.split(",");
+        double latitude = Double.parseDouble(parts[0].trim());
+        double longitude = Double.parseDouble(parts[1].trim());
+        Double altitude = null;
+        if (parts.length > 2 && !parts[2].trim().isEmpty()) {
+            altitude = Double.parseDouble(parts[2].trim());
+        }
+        return (altitude != null) ? new GeoCoordinates(latitude, longitude, altitude) : new GeoCoordinates(latitude, longitude);
+    }
+
+    public void getCoordenada2(String queryString, GeoCoordinates geoCoordinates) {
+
+        AddressQuery query = new AddressQuery(queryString, geoCoordinates);
+        SearchOptions options = new SearchOptions();
+        options.languageCode = LanguageCode.DE_DE;
+        options.maxItems = 1;
+
+        searchEngine.search(query, options, Coordenada2SearchCallback);
+    }
+
+    private final SearchCallback Coordenada2SearchCallback = new SearchCallback() {
+        @Override
+        public void onSearchCompleted(SearchError searchError, List<Place> list) {
+            if (searchError != null) {
+                showDialog("Geocoding", "Error: " + searchError.toString());
+                return;
+            }
+
+            if (list.isEmpty()) {
+                showDialog("Geocoding result", "No se encontraron resultados");
+                return;
+            }
+
+            Place geocodingResult = list.get(0); // Obtener el primer resultado
+            GeoCoordinates geoCoordinates = geocodingResult.getGeoCoordinates();
+            coordenada2 = geoCoordinates; // Guardar las coordenadas obtenidas en la variable global
+            addRouteIfBothCoordinatesAreAvailable(); // Llamar a la función para agregar la ruta si ambas coordenadas están disponibles
+        }
+    };
 
     public void showMapCircle(GeoCoordinates centerCoordinates, float radius) {
         // Primero verifica si hay un MapPolygon existente y lo elimina
@@ -306,13 +492,14 @@ public class MainActivity extends AppCompatActivity implements PlatformPositioni
     private void loadMapScene() {
         // Verifica si tienes permisos para acceder a la ubicación del usuario
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
-            // Obtiene la última ubicación conocida del usuario
+            // Obtén la última ubicación conocida del usuario
             LocationManager locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
             Location lastKnownLocation = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
             if (lastKnownLocation != null) {
                 // Si se encuentra una ubicación conocida, mueve la cámara del mapa a esa ubicación
                 GeoCoordinates userCoordinates = new GeoCoordinates(lastKnownLocation.getLatitude(), lastKnownLocation.getLongitude());
-                mapView.getCamera().lookAt(userCoordinates);
+                routingExample = new RoutingExample(MainActivity.this, mapView,userCoordinates);
+                //mapView.getCamera().lookAt(userCoordinates);
             }
         }
         // Verifica si es después de las 8:00 p.m. y antes de las 6:00 a.m.
@@ -324,6 +511,7 @@ public class MainActivity extends AppCompatActivity implements PlatformPositioni
                 @Override
                 public void onLoadScene(@Nullable MapError mapError) {
                     if (mapError == null) {
+                        // No se produjo ningún error al cargar la escena del mapa
                     } else {
                         Log.d("loadMapScene()", "Loading map failed: mapError: " + mapError.name());
                     }
@@ -335,6 +523,7 @@ public class MainActivity extends AppCompatActivity implements PlatformPositioni
                 @Override
                 public void onLoadScene(@Nullable MapError mapError) {
                     if (mapError == null) {
+                        // No se produjo ningún error al cargar la escena del mapa
                     } else {
                         Log.d("loadMapScene()", "Loading map failed: mapError: " + mapError.name());
                     }
