@@ -303,7 +303,7 @@ public class RoutingExample {
         mapMarkerList.clear();
     }
 
-    private void clearRoute() {
+    public void clearRoute() {
         for (MapPolyline mapPolyline : mapPolylines) {
             mapView.getMapScene().removeMapPolyline(mapPolyline);
         }

@@ -23,6 +23,7 @@ import android.view.View;
 import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.LinearLayout;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.here.sdk.core.Color;
@@ -66,7 +67,7 @@ public class MainActivity extends AppCompatActivity implements PlatformPositioni
     private MapCamera mapCamera;
     private PlatformPositioningProvider positioningProvider;
     private LocationIndicator currentLocationIndicator;
-    private ImageButton botonBuscar, regresarUbicacion, botonLimite, botonEliminar, botonRadio, buscarDireccion, botonRuta, boton_ruta ;
+    private ImageButton botonBuscar, regresarUbicacion, botonLimite, botonEliminar, botonRadio, buscarDireccion, botonRuta, boton_ruta, botonLimpiar;
     private EditText cajaBusqueda, textoRadio, input_coordenada1, input_coordenada2;
     private SearchExample searchExample;
     private LinearLayout layoutRadio, linearLayout, rutaLayout;
@@ -118,7 +119,6 @@ public class MainActivity extends AppCompatActivity implements PlatformPositioni
         cajaBusqueda = findViewById(R.id.cajaBusqueda);
         botonBuscar = findViewById(R.id.botonBuscar);
 
-
         botonBuscar.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -153,6 +153,11 @@ public class MainActivity extends AppCompatActivity implements PlatformPositioni
             public void onClick(View v) {
                 if (layoutRadio.getVisibility() == View.GONE) {
                     layoutRadio.setVisibility(View.VISIBLE);
+                    ocultarMenuRuta();
+                    ocultarBusquedaDirecciones();
+                    ocultarOtrosMenus(botonRadio);
+                    ocultarBusquedaDirecciones();
+                    ocultarMenuRuta();
                 } else {
                     layoutRadio.setVisibility(View.GONE);
                 }
@@ -206,6 +211,9 @@ public class MainActivity extends AppCompatActivity implements PlatformPositioni
             public void onClick(View v) {
                 if (linearLayout.getVisibility() == View.GONE) {
                     linearLayout.setVisibility(View.VISIBLE);
+                    ocultarOtrosMenus(buscarDireccion);
+                    ocultarMenuRadio();
+                    ocultarMenuRuta();
                 } else {
                     linearLayout.setVisibility(View.GONE);
                 }
@@ -222,6 +230,10 @@ public class MainActivity extends AppCompatActivity implements PlatformPositioni
                 if (rutaLayout.getVisibility() == View.GONE && boton_ruta.getVisibility() == View.GONE) {
                     rutaLayout.setVisibility(View.VISIBLE);
                     boton_ruta.setVisibility(View.VISIBLE);
+                    ocultarBusquedaDirecciones();
+                    ocultarOtrosMenus(botonRuta);
+                    ocultarBusquedaDirecciones();
+                    ocultarMenuRadio();
                 } else {
                     rutaLayout.setVisibility(View.GONE);
                     boton_ruta.setVisibility(View.GONE);
@@ -245,14 +257,69 @@ public class MainActivity extends AppCompatActivity implements PlatformPositioni
                 }
             }
         });
+
+        botonLimpiar = findViewById(R.id.botonLimpiar);
+        botonLimpiar.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                limpiarMapa();
+            }
+        });
     }
 
-    private void getAddressForCoordinates(GeoCoordinates geoCoordinates) {
-        SearchOptions reverseGeocodingOptions = new SearchOptions();
-        reverseGeocodingOptions.languageCode = LanguageCode.EN_GB;
-        reverseGeocodingOptions.maxItems = 1;
+    private void limpiarMapa() {
+        // Limpiar el círculo del mapa
+        if (mapCircle != null) {
+            mapScene.removeMapPolygon(mapCircle);
+            mapCircle = null;
+        }
 
-        searchEngine.search(geoCoordinates, reverseGeocodingOptions, addressSearchCallback);
+        // Limpiar la ruta del mapa
+        if (routingExample != null) {
+            routingExample.clearRoute();
+        }
+
+        // Limpiar la búsqueda de direcciones
+        ocultarBusquedaDirecciones();
+    }
+
+    private void ocultarBusquedaDirecciones() {
+        linearLayout.setVisibility(View.GONE);
+        cajaBusqueda.setText("");
+    }
+
+    private void ocultarOtrosMenus(View botonSeleccionado) {
+        if (botonSeleccionado != botonRadio) {
+            layoutRadio.setVisibility(View.GONE);
+            textoRadio.setText("");
+            if (mapCircle != null) {
+                mapScene.removeMapPolygon(mapCircle);
+                mapCircle = null;
+            }
+        }
+        if (botonSeleccionado != botonRuta) {
+            rutaLayout.setVisibility(View.GONE);
+            boton_ruta.setVisibility(View.GONE);
+            input_coordenada1.setText("");
+            input_coordenada2.setText("");
+            // Aquí puedes agregar código para limpiar cualquier otra cosa relacionada con la ruta
+        }
+    }
+    private void ocultarMenuRadio() {
+        layoutRadio.setVisibility(View.GONE);
+        textoRadio.setText("");
+        if (mapCircle != null) {
+            mapScene.removeMapPolygon(mapCircle);
+            mapCircle = null;
+        }
+    }
+
+    private void ocultarMenuRuta() {
+        rutaLayout.setVisibility(View.GONE);
+        boton_ruta.setVisibility(View.GONE);
+        input_coordenada1.setText("");
+        input_coordenada2.setText("");
+        // Aquí puedes agregar código adicional para limpiar cualquier cosa relacionada con la ruta
     }
 
     private final SearchCallback addressSearchCallback = new SearchCallback() {
@@ -267,14 +334,6 @@ public class MainActivity extends AppCompatActivity implements PlatformPositioni
             showDialog("Información de la ubicación:", list.get(0).getAddress().addressText);
         }
     };
-
-    private void getAddressForCoordinatess(GeoCoordinates geoCoordinates) {
-        SearchOptions reverseGeocodingOptions = new SearchOptions();
-        reverseGeocodingOptions.languageCode = LanguageCode.EN_GB;
-        reverseGeocodingOptions.maxItems = 1;
-
-        searchEngine.search(geoCoordinates, reverseGeocodingOptions, addresssSearchCallback);
-    }
 
     private final SearchCallback addresssSearchCallback = new SearchCallback() {
         @Override
@@ -341,25 +400,6 @@ public class MainActivity extends AppCompatActivity implements PlatformPositioni
         MapCameraAnimation animation =
                 MapCameraAnimationFactory.flyTo(geoCoordinatesUpdate, bowFactor, Duration.ofSeconds(3));
         mapCamera.startAnimation(animation);
-    }
-
-    private String coordinatesToString(GeoCoordinates coordinates) {
-        if (coordinates.altitude != null) {
-            return String.format("%.5f, %.5f, %.2f", coordinates.latitude, coordinates.longitude, coordinates.altitude);
-        } else {
-            return String.format("%.5f, %.5f", coordinates.latitude, coordinates.longitude);
-        }
-    }
-
-    public static GeoCoordinates fromString(String coordinatesString) {
-        String[] parts = coordinatesString.split(",");
-        double latitude = Double.parseDouble(parts[0].trim());
-        double longitude = Double.parseDouble(parts[1].trim());
-        Double altitude = null;
-        if (parts.length > 2 && !parts[2].trim().isEmpty()) {
-            altitude = Double.parseDouble(parts[2].trim());
-        }
-        return (altitude != null) ? new GeoCoordinates(latitude, longitude, altitude) : new GeoCoordinates(latitude, longitude);
     }
 
     public void getCoordenada2(String queryString, GeoCoordinates geoCoordinates) {

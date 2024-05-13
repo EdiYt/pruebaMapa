@@ -151,6 +151,19 @@
         app:srcCompat="@drawable/radio" />
 
     <ImageButton
+        android:id="@+id/botonLimpiar"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="340dp"
+        android:layout_marginBottom="15dp"
+        android:background="#00FFFFFF"
+        android:backgroundTint="#00FFFFFF"
+        android:src="@drawable/limpiar"
+        android:elevation="2dp"
+        app:layout_constraintBottom_toTopOf="@+id/botonRuta"
+        app:layout_constraintStart_toStartOf="parent" />
+
+    <ImageButton
         android:id="@+id/botonRuta"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
@@ -167,7 +180,7 @@
         android:id="@+id/regresarUbicacion"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginStart="335dp"
+        android:layout_marginStart="340dp"
         android:layout_marginBottom="60dp"
         android:background="#00FFFFFF"
         android:backgroundTint="#00FFFFFF"
