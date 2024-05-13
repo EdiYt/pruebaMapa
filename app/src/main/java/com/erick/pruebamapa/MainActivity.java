@@ -74,7 +74,6 @@ public class MainActivity extends AppCompatActivity implements PlatformPositioni
     private MapScene mapScene;
     private RoutingExample routingExample;
     private GeoCoordinates coordenada1, coordenada2;
-    private LocationManager locationManager;
     private SearchEngine searchEngine;
 
 
@@ -89,13 +88,14 @@ public class MainActivity extends AppCompatActivity implements PlatformPositioni
         mapView = findViewById(R.id.map_view);
         mapView.onCreate(savedInstanceState);
         searchExample = new SearchExample(MainActivity.this, mapView);
-        loadMapScene();
+
         tiltMap();
         try {
             searchEngine = new SearchEngine();
         } catch (InstantiationErrorException e) {
             throw new RuntimeException("Initialization of SearchEngine failed: " + e.error.name());
         }
+        loadMapScene();
 
         // Solicitar permisos de internet y de localización
         requestInternetPermission();
@@ -212,9 +212,6 @@ public class MainActivity extends AppCompatActivity implements PlatformPositioni
             }
         });
 
-
-        Location lastKnownLocation = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
-        GeoCoordinates userCoordinates = new GeoCoordinates(lastKnownLocation.getLatitude(), lastKnownLocation.getLongitude());
         rutaLayout = findViewById(R.id.rutaLayout);
         botonRuta = findViewById(R.id.botonRuta);
 
