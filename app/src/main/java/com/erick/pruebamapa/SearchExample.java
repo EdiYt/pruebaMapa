@@ -331,7 +331,7 @@ public class SearchExample {
             addPoiMapMarker(geoCoordinates); // Agregar un marcador en el mapa
 
             // Mover la cámara del mapa a la dirección buscada
-            double distanceInMeters = 1000 * 0.5; // Ajusta la distancia según tus preferencias
+            double distanceInMeters = 1000 * 0.5;
             MapMeasure mapMeasureZoom = new MapMeasure(MapMeasure.Kind.DISTANCE, distanceInMeters);
             camera.lookAt(geoCoordinates, mapMeasureZoom);
         }

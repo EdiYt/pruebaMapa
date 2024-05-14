@@ -111,7 +111,6 @@ public class MainActivity extends AppCompatActivity implements PlatformPositioni
             // Si el GPS está apagado, muestra un mensaje o realiza las acciones necesarias para que prenda el GPS
             showGPSDisabledDialog();
         } else {
-            // El GPS está encendido
         }
 
         // Initialize positioning provider
@@ -180,7 +179,6 @@ public class MainActivity extends AppCompatActivity implements PlatformPositioni
                                 if (mapScene != null) {
                                     showMapCircle(userCoordinates, (float) radio);
                                 } else {
-                                    // Manejar el caso en que mapScene sea nulo
                                 }
                             }
                         }
@@ -188,7 +186,6 @@ public class MainActivity extends AppCompatActivity implements PlatformPositioni
                         Toast.makeText(MainActivity.this, "El radio máximo permitido es de 5000 metros.", Toast.LENGTH_SHORT).show();
                     }
                 } else {
-                    // Manejar el caso en que el EditText esté vacío
                     Toast.makeText(MainActivity.this, "Por favor ingrese un valor de radio.", Toast.LENGTH_SHORT).show();
                 }
             }
@@ -314,7 +311,6 @@ public class MainActivity extends AppCompatActivity implements PlatformPositioni
             boton_ruta.setVisibility(View.GONE);
             input_coordenada1.setText("");
             input_coordenada2.setText("");
-            // Aquí puedes agregar código para limpiar cualquier otra cosa relacionada con la ruta
         }
     }
     private void ocultarMenuRadio() {
@@ -331,7 +327,6 @@ public class MainActivity extends AppCompatActivity implements PlatformPositioni
         boton_ruta.setVisibility(View.GONE);
         input_coordenada1.setText("");
         input_coordenada2.setText("");
-        // Aquí puedes agregar código adicional para limpiar cualquier cosa relacionada con la ruta
     }
 
     private final SearchCallback addressSearchCallback = new SearchCallback() {
@@ -341,8 +336,6 @@ public class MainActivity extends AppCompatActivity implements PlatformPositioni
                 showDialog("Reverse geocoding", "Error: " + searchError.toString());
                 return;
             }
-
-            // If error is null, list is guaranteed to be not empty.
             showDialog("Información de la ubicación:", list.get(0).getAddress().addressText);
         }
     };
@@ -354,8 +347,6 @@ public class MainActivity extends AppCompatActivity implements PlatformPositioni
                 showDialog("Reverse geocoding", "Error: " + searchError.toString());
                 return;
             }
-
-            // If error is null, list is guaranteed to be not empty.
             input_coordenada1.setText(list.get(0).getAddress().addressText);
         }
     };
@@ -461,7 +452,7 @@ public class MainActivity extends AppCompatActivity implements PlatformPositioni
         GeoCircle geoCircle = new GeoCircle(centerCoordinates, radiusInMeters);
 
         GeoPolygon geoPolygon = new GeoPolygon(geoCircle);
-        Color fillColor = Color.valueOf(255, 165, 0, 0.5f); // Naranja en RGBA
+        Color fillColor = Color.valueOf(255, 165, 0, 0.5f);
         MapPolygon mapPolygon = new MapPolygon(geoPolygon, fillColor);
 
         return mapPolygon;
@@ -497,7 +488,7 @@ public class MainActivity extends AppCompatActivity implements PlatformPositioni
             Location lastKnownLocation = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
             if (lastKnownLocation != null) {
                 GeoCoordinates userCoordinates = new GeoCoordinates(lastKnownLocation.getLatitude(), lastKnownLocation.getLongitude());
-                double distanceInMeters = 1000 * 0.5; // Ajusta la distancia según tus preferencias
+                double distanceInMeters = 1000 * 0.5;
                 MapMeasure mapMeasureZoom = new MapMeasure(MapMeasure.Kind.DISTANCE, distanceInMeters);
                 mapView.getCamera().lookAt(userCoordinates, mapMeasureZoom);
             }
@@ -678,7 +669,6 @@ public class MainActivity extends AppCompatActivity implements PlatformPositioni
 
         locationIndicator.updateLocation(location);
 
-        // Show the indicator on the map view.
         locationIndicator.enable(mapView);
 
         // Asigna la referencia al nuevo indicador de ubicación
