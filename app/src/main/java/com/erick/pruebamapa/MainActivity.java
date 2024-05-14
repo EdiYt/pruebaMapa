@@ -40,6 +40,7 @@ import com.here.sdk.mapview.LocationIndicator;
 import com.here.sdk.mapview.MapCamera;
 import com.here.sdk.mapview.MapCameraAnimation;
 import com.here.sdk.mapview.MapCameraAnimationFactory;
+import com.here.sdk.mapview.MapMarker;
 import com.here.sdk.mapview.MapPolygon;
 import com.here.sdk.mapview.MapError;
 import com.here.sdk.mapview.MapMeasure;
@@ -54,6 +55,7 @@ import com.here.sdk.search.SearchError;
 import com.here.sdk.search.SearchOptions;
 import com.here.time.Duration;
 
+import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
@@ -76,6 +78,7 @@ public class MainActivity extends AppCompatActivity implements PlatformPositioni
     private RoutingExample routingExample;
     private GeoCoordinates coordenada1, coordenada2;
     private SearchEngine searchEngine;
+    private List<MapMarker> mapMarkerList = new ArrayList<>();
 
 
     @Override
@@ -113,8 +116,6 @@ public class MainActivity extends AppCompatActivity implements PlatformPositioni
 
         // Initialize positioning provider
         positioningProvider = new PlatformPositioningProvider(this);
-
-
 
         cajaBusqueda = findViewById(R.id.cajaBusqueda);
         botonBuscar = findViewById(R.id.botonBuscar);
@@ -262,10 +263,24 @@ public class MainActivity extends AppCompatActivity implements PlatformPositioni
         botonLimpiar.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                eliminarMarcadores();
                 limpiarMapa();
             }
         });
     }
+
+    private void eliminarMarcadores() {
+        if (mapView != null && mapView.getMapScene() != null) {
+            MapScene mapScene = mapView.getMapScene();
+            if (mapMarkerList != null) {
+                for (MapMarker mapMarker : mapMarkerList) {
+                    mapScene.removeMapMarker(mapMarker);
+                }
+                mapMarkerList.clear();
+            }
+        }
+    }
+
 
     private void limpiarMapa() {
         // Limpiar el círculo del mapa
@@ -278,9 +293,6 @@ public class MainActivity extends AppCompatActivity implements PlatformPositioni
         if (routingExample != null) {
             routingExample.clearRoute();
         }
-
-        // Limpiar la búsqueda de direcciones
-        ocultarBusquedaDirecciones();
     }
 
     private void ocultarBusquedaDirecciones() {
